@@ -25,10 +25,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+//import android.util.Log;
 
 import com.androzic.data.TrackerFootprins;
 import com.androzic.data.Tracker;
+import com.androzic.Log;
 
 /**
  * This class helps open, create, and upgrade the database file.
@@ -143,9 +144,49 @@ class TrackerHelper extends SQLiteOpenHelper
 
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		
-		Log.w(TAG, ">>>> Constructor DB_VER " + DATABASE_VERSION);
+		Log.w(TAG, "DATABASE_VERSION = " + DATABASE_VERSION);
 	}
 
+	public Tracker updateTrackerPosition(Tracker currentTracker, Tracker newTracker)
+	{
+		Log.w(TAG, "newTracker.sender = " + newTracker.sender);
+		Log.w(TAG, "newTracker.time = " + newTracker.time);
+		Log.w(TAG, "IN < currentTracker.time = " + currentTracker.time);
+		
+		if (newTracker.time == 0)
+			newTracker.time = System.currentTimeMillis();
+
+		if(currentTracker.time < newTracker.time)
+		{
+			insertNewFootprint(newTracker);
+			
+			currentTracker.longitude = newTracker.longitude;
+			currentTracker.latitude = newTracker.latitude;
+			currentTracker.time = newTracker.time;
+		}
+		
+		Log.w(TAG, "ret > currentTracker.time = " + currentTracker.time);
+		
+		return currentTracker;
+	}
+	
+	private long insertNewFootprint(Tracker tracker)
+	{
+		ContentValues values = new ContentValues();
+		SQLiteDatabase db = getWritableDatabase();
+		
+		values.clear();
+		values.put(TRACKER_ID, tracker._id);
+		values.put(LATITUDE, tracker.latitude);
+		values.put(LONGITUDE, tracker.longitude);
+		values.put(SPEED, tracker.speed);
+		values.put(BATTERY, tracker.battery);
+		values.put(SIGNAL, tracker.signal);
+		values.put(TIME, Long.valueOf(tracker.time));
+		
+		return db.insert(TABLE_HISTORY, null, values);
+	}
+	
 	public long updateTracker(Tracker tracker)
 	{
 		Log.w(TAG, ">>>> updateTracker(" + tracker.sender + ")");
@@ -399,7 +440,7 @@ class TrackerHelper extends SQLiteOpenHelper
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
 	{
-		Log.e(TAG, " --- onUpgrade database from " + oldVersion
+		Log.w(TAG, " --- onUpgrade database from " + oldVersion
 		          + " to " + newVersion + " version --- ");
 		
 		db.beginTransaction();
