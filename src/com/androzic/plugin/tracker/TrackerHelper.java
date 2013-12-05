@@ -33,7 +33,7 @@ import com.androzic.data.Tracker;
 /**
  * This class helps open, create, and upgrade the database file.
  */
-class TrackerDataAccess extends SQLiteOpenHelper
+class TrackerHelper extends SQLiteOpenHelper
 {
 	private static final String DATABASE_NAME = "tracker.db";
 	private static final int DATABASE_VERSION = 3;
@@ -138,7 +138,7 @@ class TrackerDataAccess extends SQLiteOpenHelper
 	private static final String[] pointColumnsAll = new String[] { _POINT_ID, LATITUDE, LONGITUDE, SPEED, BATTERY, SIGNAL, TIME };
 
 	
-	TrackerDataAccess(Context context)
+	TrackerHelper(Context context)
 	{
 
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -227,13 +227,13 @@ class TrackerDataAccess extends SQLiteOpenHelper
 	{
 		Log.w(TAG, ">>>> removeTracker(" + tracker.sender + ")");
 		SQLiteDatabase db = getWritableDatabase();
-		Cursor cursor = db.query(TrackerDataAccess.TABLE_TRACKERS, trackerColumnsId, SENDER + " = ?", new String[] { tracker.sender }, null, null, null);
+		Cursor cursor = db.query(TrackerHelper.TABLE_TRACKERS, trackerColumnsId, SENDER + " = ?", new String[] { tracker.sender }, null, null, null);
 		if (cursor.getCount() > 0)
 		{
 			cursor.moveToFirst();
 			long id = cursor.getLong(cursor.getColumnIndex(_TRACKER_ID));
 			cursor.close();
-			db.delete(TrackerDataAccess.TABLE_TRACKERS, _TRACKER_ID + " = ?", new String[] { String.valueOf(id) });
+			db.delete(TrackerHelper.TABLE_TRACKERS, _TRACKER_ID + " = ?", new String[] { String.valueOf(id) });
 		}
 	}
 
@@ -320,7 +320,7 @@ class TrackerDataAccess extends SQLiteOpenHelper
 		
 		SQLiteDatabase db = getReadableDatabase();
 		
-		return db.query(TrackerDataAccess.TABLE_TRACKERS, null , null, null, null, null, null);
+		return db.query(TrackerHelper.TABLE_TRACKERS, null , null, null, null, null, null);
 	}
 
 	public Cursor getTrackerFootprints(long trackerId)
@@ -329,7 +329,7 @@ class TrackerDataAccess extends SQLiteOpenHelper
 		
 		SQLiteDatabase db = getReadableDatabase();
 		
-		return db.query(TrackerDataAccess.TABLE_HISTORY, null , TRACKER_ID + " = ?" , new String[] {String.valueOf(trackerId)}, null, null, TIME + " DESC");
+		return db.query(TrackerHelper.TABLE_HISTORY, null , TRACKER_ID + " = ?" , new String[] {String.valueOf(trackerId)}, null, null, TIME + " DESC");
 	}
 	
 	public int saveFootprintMoid(String footprintId, String moid)

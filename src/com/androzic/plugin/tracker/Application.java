@@ -50,14 +50,26 @@ public class Application extends BaseApplication
 	
 	public static final String TRACKER_DATE_RECEIVED_BROADCAST = "com.androzic.plugin.tracker.TRACKER_DATA_RECEIVED";
 	
+	TrackerHelper trackerHelper;
+	
 	int markerColor = Color.BLUE;
 
+	/**
+	 * Processing of tracker
+	 * 
+	 * @throws RemoteException
+	 */
+	void processIncomingTracker(Tracker tracker) throws RemoteException
+	{
+		
+	}
+	
 	/**
 	 * Sends tracker to Androzic map
 	 * 
 	 * @throws RemoteException
 	 */
-	void sendTrackerOnMap(TrackerDataAccess dataAccess, Tracker tracker) throws RemoteException
+	void sendTrackerOnMap(TrackerHelper dataAccess, Tracker tracker) throws RemoteException
 	{
 		Log.w(TAG, ">>>> sendTrackerOnMap");
 		Log.w(TAG, "     tracker._id = " + tracker._id);
@@ -167,7 +179,7 @@ public class Application extends BaseApplication
 	 */
 	void sendMapObjects() throws RemoteException
 	{
-		TrackerDataAccess dataAccess = new TrackerDataAccess(this);
+		TrackerHelper dataAccess = new TrackerHelper(this);
 		Tracker tracker;
 		
 		Cursor cursor = dataAccess.getHeadersOfTrackers();
@@ -190,7 +202,7 @@ public class Application extends BaseApplication
 	 * 
 	 * @throws RemoteException
 	 */
-	void removeTrackerFromMap(TrackerDataAccess dataAccess, Tracker tracker) throws RemoteException
+	void removeTrackerFromMap(TrackerHelper dataAccess, Tracker tracker) throws RemoteException
 	{
 		if (tracker.moid <= 0)
 			return;
@@ -232,7 +244,7 @@ public class Application extends BaseApplication
 	 */
 	void removeMapObjects() throws RemoteException
 	{
-		TrackerDataAccess dataAccess = new TrackerDataAccess(this);
+		TrackerHelper dataAccess = new TrackerHelper(this);
 		Cursor cursor = dataAccess.getHeadersOfTrackers();
 		if (!cursor.moveToFirst())
 		{
@@ -326,5 +338,7 @@ public class Application extends BaseApplication
 		setInstance(this);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		markerColor = sharedPreferences.getInt(getString(R.string.pref_tracker_markercolor), getResources().getColor(R.color.marker));
+		trackerHelper = new TrackerHelper(this);
 	}
+	
 }

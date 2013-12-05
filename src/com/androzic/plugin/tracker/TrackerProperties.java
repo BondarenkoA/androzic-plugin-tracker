@@ -24,7 +24,7 @@ import com.androzic.provider.DataContract;
 public class TrackerProperties extends Activity
 {
 	private Tracker tracker;
-	private TrackerDataAccess dataAccess;
+	private TrackerHelper dataAccess;
 	private Application application;
 	
 	private TextView name;
@@ -39,7 +39,7 @@ public class TrackerProperties extends Activity
 		String sender = getIntent().getStringExtra("sender");
 		
 		application = Application.getApplication();
-		dataAccess = new TrackerDataAccess(this);
+		dataAccess = new TrackerHelper(this);
 		tracker = dataAccess.getTracker(sender);
 		
 		if (tracker == null)

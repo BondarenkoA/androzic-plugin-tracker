@@ -68,7 +68,7 @@ import com.androzic.util.StringFormatter;
 public class TrackerList extends ListActivity
 {
 	private static final String TAG = "TrackerList";
-	private TrackerDataAccess dataAccess;
+	private TrackerHelper dataAccess;
 
 	private TrackerListAdapter adapter;
 
@@ -124,7 +124,7 @@ public class TrackerList extends ListActivity
 		});
 
 		// Create database connection
-		dataAccess = new TrackerDataAccess(this);
+		dataAccess = new TrackerHelper(this);
 		Cursor cursor = dataAccess.getHeadersOfTrackers();
 		Log.w(TAG, "getTrackers() - OK");
 		

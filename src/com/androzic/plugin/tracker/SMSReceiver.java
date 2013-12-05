@@ -104,22 +104,25 @@ public class SMSReceiver extends BroadcastReceiver
 		if (! "".equals(tracker.sender))
 		{
 			// Save tracker data
-			TrackerDataAccess dataAccess = new TrackerDataAccess(context);
-			dataAccess.updateTracker(tracker);
+			// TODO kill TrackerDataAccess dataAccess = new TrackerDataAccess(context);
+			// TODO kill dataAccess.updateTracker(tracker);
 			
 			try
 			{
 				Application application = Application.getApplication();
-				tracker = dataAccess.getTracker(tracker.sender);//get  latest positon of tracker
 				
-				application.sendTrackerOnMap(dataAccess, tracker);
+				application.processIncomingTracker(tracker);
+				
+				// TODO kill tracker = dataAccess.getTracker(tracker.sender);//get  latest positon of tracker
+				
+				// TODO kill application.sendTrackerOnMap(dataAccess, tracker);
 			}
 			catch (RemoteException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			dataAccess.close();
+			// TODO kill dataAccess.close();
 
 			context.sendBroadcast(new Intent(Application.TRACKER_DATE_RECEIVED_BROADCAST));
 
