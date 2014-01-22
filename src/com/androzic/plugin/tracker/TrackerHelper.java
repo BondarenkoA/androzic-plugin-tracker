@@ -20,15 +20,27 @@
 
 package com.androzic.plugin.tracker;
 
+import java.util.Calendar;
+import java.util.Date;
+
+import android.content.ContentProviderClient;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.RemoteException;
+import android.preference.PreferenceManager;
+import android.text.format.DateFormat;
 //import android.util.Log;
 
 import com.androzic.data.TrackerFootprins;
 import com.androzic.data.Tracker;
+import com.androzic.provider.DataContract;
 import com.androzic.Log;
 
 /**
@@ -138,31 +150,92 @@ class TrackerHelper extends SQLiteOpenHelper
 	private static final String[] pointColumnsId = new String[] { _POINT_ID };
 	private static final String[] pointColumnsAll = new String[] { _POINT_ID, LATITUDE, LONGITUDE, SPEED, BATTERY, SIGNAL, TIME };
 
+	private ContentProviderClient mapObjContentProvider;
 	
+	private int prefMarkerColor = Color.BLUE;
+	private int prefFootprintsCount = 0;
+	private Context context;
+
 	TrackerHelper(Context context)
 	{
 
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		
 		Log.w(TAG, "DATABASE_VERSION = " + DATABASE_VERSION);
+		
+		mapObjContentProvider = context.getContentResolver().acquireContentProviderClient(DataContract.MAPOBJECTS_URI);
+		
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+		prefFootprintsCount = Integer.parseInt(sharedPreferences.getString(context.getString(R.string.pref_tracker_footprints_count),
+																	   context.getString(R.string.def_tracker_footprints_count) 
+				                               							)
+				                           );
+		prefMarkerColor = sharedPreferences.getInt(context.getString(R.string.pref_tracker_markercolor), context.getResources().getColor(R.color.marker));
+		
+		//dateFormat = new DateFormat();
+		this.context = context;
+		
+	}
+	
+	public void processIncomingTracker(Tracker tracker, boolean updateAndrozicApp) throws RemoteException
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		Log.w(TAG, "IN tracker.time = " + tracker.time);
+		Log.w(TAG, "IN tracker.latitude = " + tracker.latitude);
+		Log.w(TAG, "IN tracker.longitude = " + tracker.longitude);
+		
+		Tracker currentTracker = getTracker(tracker.sender);
+		
+		if(currentTracker != null)
+		{
+			currentTracker = updateTrackerPositionInDB(tracker);
+			updateTrackerInAndrozicApp(currentTracker);
+		}
+		else
+		{
+			tracker.name = tracker.sender;
+			
+			long moid = sendNewTrackerInAndrozicApp(tracker);
+			
+			tracker.moid = moid;
+			
+			insertNewTrackerInDB(tracker);
+		}
+		
 	}
 
-	public Tracker updateTrackerPosition(Tracker currentTracker, Tracker newTracker)
+	public void processIncomingTracker(Tracker tracker) throws RemoteException
 	{
-		Log.w(TAG, "newTracker.sender = " + newTracker.sender);
-		Log.w(TAG, "newTracker.time = " + newTracker.time);
-		Log.w(TAG, "IN < currentTracker.time = " + currentTracker.time);
+		processIncomingTracker(tracker, true);
+	}
+	
+	private Tracker updateTrackerPositionInDB(Tracker tracker)
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		//Log.w(TAG, "IN tracker.time = " + tracker.time);
+		//Log.w(TAG, "IN tracker.latitude = " + tracker.latitude);
+		//Log.w(TAG, "IN tracker.longitude = " + tracker.longitude);
 		
-		if (newTracker.time == 0)
-			newTracker.time = System.currentTimeMillis();
+		Tracker currentTracker = getTracker(tracker.sender);
+		
+		Log.w(TAG, "currentTracker.time = " + currentTracker.time);
+		
+		
+		if (tracker.time == 0)
+			tracker.time = System.currentTimeMillis();
 
-		if(currentTracker.time < newTracker.time)
+		if(currentTracker.time != tracker.time ||
+		   currentTracker.latitude != tracker.latitude ||
+		   currentTracker.longitude != tracker.longitude ) 
 		{
-			insertNewFootprint(newTracker);
-			
-			currentTracker.longitude = newTracker.longitude;
-			currentTracker.latitude = newTracker.latitude;
-			currentTracker.time = newTracker.time;
+			insertNewFootprintInDB(tracker);
+		}
+		
+		if(currentTracker.time <= tracker.time)
+		{			
+			currentTracker.longitude = tracker.longitude;
+			currentTracker.latitude = tracker.latitude;
+			currentTracker.time = tracker.time;
 		}
 		
 		Log.w(TAG, "ret > currentTracker.time = " + currentTracker.time);
@@ -170,8 +243,162 @@ class TrackerHelper extends SQLiteOpenHelper
 		return currentTracker;
 	}
 	
-	private long insertNewFootprint(Tracker tracker)
+	/**
+	 * Update tracker data in CntentProvider for show it on Androzic map
+	 * 
+	 * @throws RemoteException
+	 */
+	private void updateTrackerInAndrozicApp(Tracker tracker) throws RemoteException
 	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		//Log.w(TAG, "IN tracker.time = " + tracker.time);
+		//Log.w(TAG, "IN tracker.latitude = " + tracker.latitude);
+		//Log.w(TAG, "IN tracker.longitude = " + tracker.longitude);
+		
+		ContentValues values = new ContentValues();
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LATITUDE_COLUMN], tracker.latitude);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LONGITUDE_COLUMN], tracker.longitude);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_NAME_COLUMN], tracker.name);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_IMAGE_COLUMN], tracker.image);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_BACKCOLOR_COLUMN], prefMarkerColor);
+		
+		Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, tracker.moid);
+		Log.w(TAG, "Tracker uri = " + ( uri != null ? uri : "NULL" ) );
+		
+		mapObjContentProvider.update(uri, values, null, null);
+		
+		setFootprintsInAndrozicApp(tracker);
+		
+	}
+	
+	/**
+	 * Update trackers footprints data in CntentProvider for show it on Androzic map
+	 * 
+	 * @throws RemoteException
+	 */
+	private void setFootprintsInAndrozicApp(Tracker tracker) throws RemoteException
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		
+		Cursor cursor = getTrackerFootprints(tracker._id);
+		
+		cursor.moveToFirst(); //skip first point
+		
+		if (prefFootprintsCount > 0 && cursor.moveToNext())
+		{
+			TrackerFootprins footprint = new TrackerFootprins();
+			
+			ContentValues values = new ContentValues();
+			
+			do
+			{
+				
+				footprint = getTrackerFootprint(cursor);
+				
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTimeInMillis(footprint.time);
+				Date date = calendar.getTime();
+				String time = DateFormat.getTimeFormat(context).format(date);
+				
+				String pointName = tracker.name + " " + time;
+			
+				values.clear();
+				
+				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LATITUDE_COLUMN], footprint.latitude);
+				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LONGITUDE_COLUMN], footprint.longitude);
+				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_NAME_COLUMN], pointName);
+				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_IMAGE_COLUMN], "");
+				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_BACKCOLOR_COLUMN], prefMarkerColor);
+
+				if (footprint.moid <= 0)
+				{
+					Uri uri = mapObjContentProvider.insert(DataContract.MAPOBJECTS_URI, values);
+					if (uri != null)
+					{
+						setFootprintMoidInDB(String.valueOf(footprint._id), String.valueOf(ContentUris.parseId(uri)));
+					}
+				}
+				else
+				{
+					Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
+					mapObjContentProvider.update(uri, values, null, null);
+				}
+				
+			}
+			while (cursor.moveToNext() && --prefFootprintsCount > 0);
+			
+			while (!cursor.isAfterLast())//erase last points from map for preserve displayed footprints count
+			{
+				footprint = getTrackerFootprint(cursor);
+				if (footprint.moid > 0)
+				{
+					Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
+					mapObjContentProvider.delete(uri, null, null);
+					
+				    setFootprintMoidInDB(footprint._id, 0);
+				}
+				
+				cursor.moveToNext();
+			}
+			
+		}
+		
+		cursor.close();
+	}
+	
+	
+	/**
+	 * Sends tracker data in CntentProvider for show it on Androzic map
+	 * 
+	 * @throws RemoteException
+	 */
+	private long sendNewTrackerInAndrozicApp(Tracker tracker) throws RemoteException
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		
+		ContentValues values = new ContentValues();
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LATITUDE_COLUMN], tracker.latitude);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LONGITUDE_COLUMN], tracker.longitude);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_NAME_COLUMN], tracker.name);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_IMAGE_COLUMN], tracker.image);
+		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_BACKCOLOR_COLUMN], prefMarkerColor);
+		
+		Uri uri = mapObjContentProvider.insert(DataContract.MAPOBJECTS_URI, values);
+		if (uri != null)
+		{
+			return ContentUris.parseId(uri);
+		}
+		
+		return 0;
+	}
+	
+	private void insertNewTrackerInDB(Tracker tracker)
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		
+		ContentValues values = new ContentValues();
+		SQLiteDatabase db = getWritableDatabase();
+		
+		if (tracker.time == 0)
+			tracker.time = System.currentTimeMillis();
+		
+		values.clear();
+		
+		values.put(MOID, tracker.moid);
+		values.put(TITLE, tracker.name);
+		values.put(ICON, tracker.image);
+		values.put(IMEI, tracker.imei);
+		values.put(SENDER, tracker.sender);
+				
+		tracker._id = db.insert(TABLE_TRACKERS, null, values);
+		
+		insertNewFootprintInDB(tracker);		
+	}
+	
+	private long insertNewFootprintInDB(Tracker tracker)
+	{
+		Log.w(TAG, "IN tracker.sender = " + tracker.sender);
+		
 		ContentValues values = new ContentValues();
 		SQLiteDatabase db = getWritableDatabase();
 		
@@ -373,9 +600,10 @@ class TrackerHelper extends SQLiteOpenHelper
 		return db.query(TrackerHelper.TABLE_HISTORY, null , TRACKER_ID + " = ?" , new String[] {String.valueOf(trackerId)}, null, null, TIME + " DESC");
 	}
 	
-	public int saveFootprintMoid(String footprintId, String moid)
+	private int setFootprintMoidInDB(String footprintId, String moid)
 	{
-		Log.w(TAG, ">>>> saveFootprintMoid(" + footprintId + "," + moid + ")");
+		Log.w(TAG, "IN footprintIdr = " + footprintId);
+		Log.w(TAG, "IN moid = " + moid);
 		
 		SQLiteDatabase db = getReadableDatabase();
 		
@@ -386,9 +614,12 @@ class TrackerHelper extends SQLiteOpenHelper
 		return db.update(TABLE_HISTORY, values, _POINT_ID + " = ?", new String[] { footprintId });
 	}
 	
-	public int saveFootprintMoid(long footprintId, long moid)
+	private int setFootprintMoidInDB(long footprintId, long moid)
 	{
-		return saveFootprintMoid( String.valueOf(footprintId), String.valueOf(moid)); 
+		Log.w(TAG, "IN footprintIdr = " + footprintId);
+		Log.w(TAG, "IN moid = " + moid);
+		
+		return setFootprintMoidInDB( String.valueOf(footprintId), String.valueOf(moid)); 
 	}
 	
 	public int clearFootprintMoids(String trackerId)

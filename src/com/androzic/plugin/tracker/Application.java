@@ -51,9 +51,6 @@ public class Application extends BaseApplication
 	
 	public static final String TRACKER_DATE_RECEIVED_BROADCAST = "com.androzic.plugin.tracker.TRACKER_DATA_RECEIVED";
 	
-	private TrackerHelper trackerHelper;
-	private ContentProviderClient mapObjContentProvider;
-	
 	int markerColor = Color.BLUE;
 
 	/**
@@ -63,128 +60,14 @@ public class Application extends BaseApplication
 	 */
 	void processIncomingTracker(Tracker tracker) throws RemoteException
 	{
-		Tracker currentTracker = trackerHelper.getTracker(tracker.sender);
+		TrackerHelper trackerHelper = new TrackerHelper(this);
 		
-		if(currentTracker != null)
-		{
-			currentTracker = trackerHelper.updateTrackerPosition(currentTracker, tracker);
-			updateTrackerInContent(currentTracker);
-		}
-		else
-		{
-			tracker.name = tracker.sender;
-			
-			long moid = sendNewTrackerOnMap(tracker);
-			
-			tracker.moid = moid;
-			
-			trackerHelper.insertNewTracker(tracker);
-		}
-	}
-	
-	/**
-	 * Sends tracker to Androzic map
-	 * 
-	 * @throws RemoteException
-	 */
-	void updateTrackerInContent(Tracker tracker) throws RemoteException
-	{
-		Log.w(TAG, "IN tracker._id = " + tracker._id);
-		Log.w(TAG, "IN tracker.time = " + tracker.time);
-		Log.w(TAG, "IN tracker.latitude = " + tracker.latitude);
-		Log.w(TAG, "IN tracker.longitude = " + tracker.longitude);
-		
-		ContentValues values = new ContentValues();
-		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LATITUDE_COLUMN], tracker.latitude);
-		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LONGITUDE_COLUMN], tracker.longitude);
-		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_NAME_COLUMN], tracker.name);
-		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_IMAGE_COLUMN], tracker.image);
-		values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_BACKCOLOR_COLUMN], markerColor);
-		
-		Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, tracker.moid);
-		Log.w(TAG, "Tracker uri = " + ( uri != null ? uri : "NULL" ) );
-		
-		mapObjContentProvider.update(uri, values, null, null);
-		
-		updateFootprintsInContent(tracker);
+		trackerHelper.processIncomingTracker(tracker);
 		
 	}
 	
-	/**
-	 * Sends tracker to Androzic map
-	 * 
-	 * @throws RemoteException
-	 */
-	private void updateFootprintsInContent(Tracker tracker) throws RemoteException
-	{
-		Cursor cursor = trackerHelper.getTrackerFootprints(tracker._id);
-		
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		int footprintsCount = Integer.parseInt(sharedPreferences.getString(getString(R.string.pref_tracker_footprints_count),
-				                               							   getString(R.string.def_tracker_footprints_count) 
-				                               							   )
-				                              );
-		cursor.moveToFirst(); //skip first point
-		
-		if (footprintsCount > 0 && cursor.moveToNext())
-		{
-			TrackerFootprins footprint = new TrackerFootprins();
-			
-			ContentValues values = new ContentValues();
-			
-			do
-			{
-				
-				footprint = trackerHelper.getTrackerFootprint(cursor);
-				
-				Calendar calendar = Calendar.getInstance();
-				calendar.setTimeInMillis(footprint.time);
-				Date date = calendar.getTime();
-				String time = DateFormat.getTimeFormat(this).format(date);
-				
-				String pointName = tracker.name + " " + time;
-			
-				values.clear();
-				
-				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LATITUDE_COLUMN], footprint.latitude);
-				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_LONGITUDE_COLUMN], footprint.longitude);
-				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_NAME_COLUMN], pointName);
-				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_IMAGE_COLUMN], "");
-				values.put(DataContract.MAPOBJECT_COLUMNS[DataContract.MAPOBJECT_BACKCOLOR_COLUMN], markerColor);
-
-				if (footprint.moid <= 0)
-				{
-					Uri uri = mapObjContentProvider.insert(DataContract.MAPOBJECTS_URI, values);
-					if (uri != null)
-					{
-						trackerHelper.saveFootprintMoid(String.valueOf(footprint._id), String.valueOf(ContentUris.parseId(uri)));
-					}
-				}
-				else
-				{
-					Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
-					mapObjContentProvider.update(uri, values, null, null);
-				}
-				
-			}
-			while (cursor.moveToNext() && --footprintsCount > 0);
-			
-			if(!cursor.isAfterLast())//erase last point from map for preserve displayed footprints count
-			{
-				footprint = trackerHelper.getTrackerFootprint(cursor);
-				if (footprint.moid > 0)
-				{
-					Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
-					mapObjContentProvider.delete(uri, null, null);
-					
-					trackerHelper.saveFootprintMoid(footprint._id, 0);
-				}
-			}
-			
-		}
-		
-		cursor.close();
-	}
+	
+	
 	
 	/**
 	 * Sends tracker to Androzic map
@@ -262,7 +145,7 @@ public class Application extends BaseApplication
 					Uri uri = contentProvider.insert(DataContract.MAPOBJECTS_URI, values);
 					if (uri != null)
 					{
-						dataAccess.saveFootprintMoid(String.valueOf(footprint._id), String.valueOf(ContentUris.parseId(uri)));
+						dataAccess.setFootprintMoidInDB(String.valueOf(footprint._id), String.valueOf(ContentUris.parseId(uri)));
 					}
 				}
 				else
@@ -282,7 +165,7 @@ public class Application extends BaseApplication
 					Uri uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
 					contentProvider.delete(uri, null, null);
 					
-					dataAccess.saveFootprintMoid(footprint._id, 0);
+					dataAccess.setFootprintMoidInDB(footprint._id, 0);
 				}
 			}
 			
@@ -344,7 +227,7 @@ public class Application extends BaseApplication
 					uri = ContentUris.withAppendedId(DataContract.MAPOBJECTS_URI, footprint.moid);
 					contentProvider.delete(uri, null, null);
 					
-					dataAccess.saveFootprintMoid(footprint._id, 0);
+					dataAccess.setFootprintMoidInDB(footprint._id, 0);
 				}
 				
 				
@@ -392,7 +275,7 @@ public class Application extends BaseApplication
 					if (footprint.moid > 0)
 					{
 						moids.add(footprint.moid);
-						dataAccess.saveFootprintMoid(footprint._id, 0);
+						dataAccess.setFootprintMoidInDB(footprint._id, 0);
 					}
 					
 					
@@ -457,10 +340,6 @@ public class Application extends BaseApplication
 	{
 		super.onCreate();
 		setInstance(this);
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		markerColor = sharedPreferences.getInt(getString(R.string.pref_tracker_markercolor), getResources().getColor(R.color.marker));
-		trackerHelper = new TrackerHelper(this);
-		mapObjContentProvider = getContentResolver().acquireContentProviderClient(DataContract.MAPOBJECTS_URI);
 		
 	}
 	
