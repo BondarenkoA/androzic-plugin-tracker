@@ -614,7 +614,7 @@ class TrackerHelper extends SQLiteOpenHelper
 		return db.update(TABLE_HISTORY, values, _POINT_ID + " = ?", new String[] { footprintId });
 	}
 	
-	private int setFootprintMoidInDB(long footprintId, long moid)
+	public int setFootprintMoidInDB(long footprintId, long moid)
 	{
 		Log.w(TAG, "IN footprintIdr = " + footprintId);
 		Log.w(TAG, "IN moid = " + moid);

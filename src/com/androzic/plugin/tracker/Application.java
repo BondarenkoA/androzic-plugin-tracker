@@ -145,7 +145,7 @@ public class Application extends BaseApplication
 					Uri uri = contentProvider.insert(DataContract.MAPOBJECTS_URI, values);
 					if (uri != null)
 					{
-						dataAccess.setFootprintMoidInDB(String.valueOf(footprint._id), String.valueOf(ContentUris.parseId(uri)));
+						dataAccess.setFootprintMoidInDB(footprint._id, ContentUris.parseId(uri) );
 					}
 				}
 				else
