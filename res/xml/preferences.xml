@@ -25,7 +25,7 @@
         android:key="@string/pref_tracker_use_flex_mode"
         android:title="@string/pref_tracker_use_flex_mode_title" />    
 	
-	<com.androzic.ui.preference.HelpfulEditTextPreference
+    <com.androzic.ui.preference.HelpfulEditTextPreference
         android:defaultValue="@string/def_tracker_footprints_count"
         android:inputType="number"
         android:key="@string/pref_tracker_footprints_count"
