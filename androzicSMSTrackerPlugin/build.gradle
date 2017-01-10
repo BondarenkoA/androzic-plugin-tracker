@@ -1,5 +1,22 @@
 apply plugin: 'com.android.application'
 
+import java.text.SimpleDateFormat;
+
+def buildTime() {
+    def df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm") // you can change it
+    df.setTimeZone(TimeZone.getTimeZone("GMT+3:00"))
+    return df.format(new Date())
+}
+
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
 android {
     compileSdkVersion 17
     buildToolsVersion '25.0.1'
@@ -8,6 +25,7 @@ android {
         applicationId "com.androzic.plugin.tracker"
         minSdkVersion 10
         targetSdkVersion 17
+        versionName "build-${buildTime()}-GitCommit-${getGitHash()}"
     }
 
     buildTypes {
