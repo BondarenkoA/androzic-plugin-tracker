@@ -78,7 +78,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 		//the main linear layout to which all tables spinners etc will be added.In this activity every element is created dynamically  to avoid using xml file
 		 mainLayout = new LinearLayout(AndroidDatabaseManager.this);
 		 mainLayout.setOrientation(LinearLayout.VERTICAL);
-		 mainLayout.setBackgroundColor(Color.GREEN);
+		 mainLayout.setBackgroundColor(Color.GRAY);
 		 mainLayout.setScrollContainer(true);
 		mainscrollview.addView(mainLayout);
 		
@@ -282,7 +282,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
                 public View getView(int position, View convertView, ViewGroup parent) {
                         View v = super.getView(position, convertView, parent);
 
-                        v.setBackgroundColor(Color.GREEN);
+                        v.setBackgroundColor(Color.GRAY);
                         TextView adap =(TextView)v;
                         adap.setTextSize(20);
                         
@@ -293,7 +293,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
                 public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
                          View v =super.getDropDownView(position, convertView, parent);
 
-                        v.setBackgroundColor(Color.GREEN);
+                        v.setBackgroundColor(Color.GRAY);
 
                         return v;
                 }
@@ -343,7 +343,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	            	Log.d("selected table name is",""+c.getString(0));
 	            	indexInfo.table_name=c.getString(0);
 	            	tvmessage.setText("Error Messages will be displayed here");
-	            	tvmessage.setBackgroundColor(Color.GREEN);
+	            	tvmessage.setBackgroundColor(Color.GRAY);
 
 	            	 //removes any data if present in the table layout
                        tableLayout.removeAllViews();
@@ -362,7 +362,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	                    public View getView(int position, View convertView, ViewGroup parent) {
 	                            View v = super.getView(position, convertView, parent);
 
-	                            v.setBackgroundColor(Color.GREEN);
+	                            v.setBackgroundColor(Color.GRAY);
 	                            TextView adap =(TextView)v;
 	                            adap.setTextSize(20);
 	                            
@@ -372,7 +372,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	                    public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
 	                             View v =super.getDropDownView(position, convertView, parent);
 
-	                            v.setBackgroundColor(Color.GREEN);
+	                            v.setBackgroundColor(Color.GRAY);
 
 	                            return v;
 	                    }
@@ -578,7 +578,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	                        	    addnewlayout.addView(ll, rll);
 
 	                        	    }
-	                        	    addnewlayout.setBackgroundColor(Color.GREEN);
+	                        	    addnewlayout.setBackgroundColor(Color.GRAY);
 	                        	    addrowsv.addView(addnewlayout);
 	                          	Log.d("Button Clicked", "");
 	                          	//the above form layout which we have created above will be displayed in an alert dialog
@@ -677,7 +677,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	                for(int k=0;k<c2.getColumnCount();k++)
 	                {
 	                 LinearLayout cell = new LinearLayout(AndroidDatabaseManager.this);
-	               	 cell.setBackgroundColor(Color.GREEN);
+	               	 cell.setBackgroundColor(Color.GRAY);
 	               	 cell.setLayoutParams(tableRowParams);
 	                final TextView tableheadercolums = new TextView(getApplicationContext());
 	               // tableheadercolums.setBackgroundDrawable(gd);
@@ -709,7 +709,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 	            		tableheader2.setPadding(0, 2, 0, 2);
 
 	            		LinearLayout cell = new LinearLayout(AndroidDatabaseManager.this);
-	   	               	cell.setBackgroundColor(Color.GREEN);
+	   	               	cell.setBackgroundColor(Color.GRAY);
 	   	               	cell.setLayoutParams(tableRowParams);
 		                final TextView tableheadercolums = new TextView(getApplicationContext());
 
@@ -791,7 +791,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
   	  int lastrid = 0;
   	// all text views , edit texts are added to this relative layout lp
       final RelativeLayout lp = new RelativeLayout(AndroidDatabaseManager.this);
-      lp.setBackgroundColor(Color.GREEN);
+      lp.setBackgroundColor(Color.GRAY);
   	  RelativeLayout.LayoutParams lay = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
   	  lay.addRule(RelativeLayout.ALIGN_PARENT_TOP);
   	  
@@ -811,7 +811,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
               public View getView(int position, View convertView, ViewGroup parent) {
                       View v = super.getView(position, convertView, parent);
 
-                      v.setBackgroundColor(Color.GREEN);
+                      v.setBackgroundColor(Color.GRAY);
                       TextView adap =(TextView)v;
                       adap.setTextSize(20);
                       
@@ -822,7 +822,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
               public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
                        View v =super.getDropDownView(position, convertView, parent);
 
-                      v.setBackgroundColor(Color.GREEN);
+                      v.setBackgroundColor(Color.GRAY);
                      
                       return v;
               }
@@ -1068,7 +1068,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
         for(int k=0;k<c3.getColumnCount();k++)
         {
         	LinearLayout cell = new LinearLayout(AndroidDatabaseManager.this);
-       	 cell.setBackgroundColor(Color.GREEN);
+       	 cell.setBackgroundColor(Color.GRAY);
        	 cell.setLayoutParams(tableRowParams);
         final TextView tableheadercolums = new TextView(getApplicationContext());
         tableheadercolums.setPadding(0, 0, 4, 3);
@@ -1093,7 +1093,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
     		tableheader2.setPadding(0, 2, 0, 2);
 
     		LinearLayout cell = new LinearLayout(AndroidDatabaseManager.this);
-            cell.setBackgroundColor(Color.GREEN);
+            cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(tableRowParams);
               	 
             final TextView tableheadercolums = new TextView(getApplicationContext());
@@ -1135,7 +1135,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
              for(int j=0 ;j<c3.getColumnCount();j++)
              {
             	 LinearLayout cell = new LinearLayout(this);
-            	 cell.setBackgroundColor(Color.GREEN);
+            	 cell.setBackgroundColor(Color.GRAY);
             	 cell.setLayoutParams(tableRowParams);
                final TextView columsView = new TextView(getApplicationContext());
   	       String column_data = "";

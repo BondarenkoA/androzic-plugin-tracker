@@ -40,7 +40,7 @@ import java.util.ArrayList;
 class TrackerDataAccess extends SQLiteOpenHelper
 {
 	private static final String DATABASE_NAME = "tracker.db";
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 4;
 	static final String TABLE_TRACKERS = "trackers";
 	static final String TABLE_HISTORY = "history";
 	private static final String TAG = "TrackerDataAccess";
@@ -371,13 +371,12 @@ class TrackerDataAccess extends SQLiteOpenHelper
 	public void onCreate(SQLiteDatabase db)
 	{
 		Log.w(TAG, ">>>> onCreate");
-		
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRACKERS);
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
-		
+
+		db.beginTransaction();
+
 		db.execSQL("PRAGMA foreign_keys = ON;");
 		
-		db.execSQL("CREATE TABLE " + TABLE_TRACKERS + " (" + _TRACKER_ID + " INTEGER PRIMARY KEY," 
+		db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_TRACKERS + " (" + _TRACKER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 													   + MOID + " INTEGER," 
 													   + IMEI + " TEXT," 
 													   + SENDER + " TEXT NOT NULL UNIQUE," 
@@ -385,7 +384,7 @@ class TrackerDataAccess extends SQLiteOpenHelper
 													   + ICON + " TEXT"  
 											      + ");");
 		
-		db.execSQL("CREATE TABLE " + TABLE_HISTORY + " (" + _POINT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," 
+		db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_HISTORY + " (" + _POINT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 													   + TRACKER_ID + " INTEGER NOT NULL," 
 													   + MOID + " INTEGER,"
 													   + LATITUDE + " REAL," 
@@ -396,8 +395,11 @@ class TrackerDataAccess extends SQLiteOpenHelper
 												       + TIME + " INTEGER," 
 												       + "FOREIGN KEY (" + TRACKER_ID + ") REFERENCES " + TABLE_TRACKERS +"(" + _TRACKER_ID + ") ON DELETE CASCADE"
 											      + ");");
-		
-		
+
+		db.setTransactionSuccessful();
+
+		db.endTransaction();
+
 	}
 
 	@Override
@@ -405,14 +407,24 @@ class TrackerDataAccess extends SQLiteOpenHelper
 	{
 		Log.e(TAG, " --- onUpgrade database from " + oldVersion
 		          + " to " + newVersion + " version --- ");
-		
+
 		db.beginTransaction();
-		
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRACKERS);
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
+
+		if (oldVersion == 3 && newVersion == 4) {
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRACKERS);
+		}
+		else {
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRACKERS);
+		}
+
+		db.setTransactionSuccessful();
+
+		db.endTransaction();
+
 		onCreate(db);
 		
-		db.endTransaction();
+
 	}
 
 
