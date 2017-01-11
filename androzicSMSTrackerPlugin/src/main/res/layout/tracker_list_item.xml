@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Extra FrameLayout is used to preserve paddings when background drawable is set -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content" >
 
@@ -27,7 +28,7 @@
             android:layout_below="@id/name"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceSmall" />
-        
+
         <TextView
             android:id="@+id/imei"
             android:layout_width="wrap_content"

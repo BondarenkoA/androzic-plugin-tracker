@@ -92,6 +92,7 @@ public class TrackerList extends ListActivity
 	public void onCreate(final Bundle savedInstanceState)
 	{
 		Log.w(TAG, ">>>> onCreate");
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.list_with_empty_view);
 
@@ -188,6 +189,9 @@ public class TrackerList extends ListActivity
 		{
 			case R.id.menuPreferences:
 				startActivity(new Intent(this, Preferences.class));
+				return true;
+			case R.id.menuDB:
+				startActivity(new Intent(this, AndroidDatabaseManager.class));
 				return true;
 		}
 		return false;

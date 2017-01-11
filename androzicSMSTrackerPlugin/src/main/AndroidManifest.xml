@@ -40,6 +40,8 @@
             android:label="@string/properties_name"
             android:theme="@style/BlackDialog" />
 
+        <activity android:name=".AndroidDatabaseManager"/>
+
         <receiver android:name=".Executor" >
             <intent-filter>
                 <action android:name="com.androzic.plugins.action.INITIALIZE" />
