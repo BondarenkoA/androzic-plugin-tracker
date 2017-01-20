@@ -1,4 +1,6 @@
-bin/
-gen/
-obj/
-*.apk
+app/build
+build
+.gradle
+.idea
+local.properties
+*.iml

@@ -1,0 +1,3 @@
+include ':androzicSMSTrackerPlugin'
+include ':androzic-library'
+project(':androzic-library').projectDir = new File(settingsDir, '../androzic-library/app')
