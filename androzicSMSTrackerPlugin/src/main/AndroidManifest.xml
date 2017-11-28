@@ -53,6 +53,11 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".xxxx_receiver" >
+            <intent-filter android:priority="100" >
+                <action android:name="bond.xxxx_connector.DATA_RECEIVED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
